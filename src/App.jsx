@@ -7,12 +7,14 @@ import Actividades from './pages/Actividades'
 import Asistencia from './pages/Asistencia'
 import Comision from './pages/Comision'
 import Resumen from './pages/Resumen'
+import VigilanteInactividad from './components/layout/VigilanteInactividad'
 
 export default function App() {
-  return (
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
+    return (
+        <BrowserRouter>
+            <AuthProvider>
+                <VigilanteInactividad />
+                <Routes>
             <Route path="/login" element={<Login />} />
             <Route
                 path="/miembros"
