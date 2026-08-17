@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import cintillo from '../../assets/images/cintillo_horizontal_2026_02.png'
 
-const ENLACES = [
+const ENLACES_ADMIN = [
     { to: '/miembros', label: 'Miembros' },
     { to: '/actividades', label: 'Actividades' },
     { to: '/asistencia', label: 'Asistencia' },
@@ -11,10 +11,14 @@ const ENLACES = [
     { to: '/resumen', label: 'Resumen' },
 ]
 
+const ENLACES_SOCIO = [{ to: '/mi-resumen', label: 'Mi Resumen' }]
+
 export default function Topbar() {
-    const { logout } = useAuth()
+    const { logout, esSocio } = useAuth()
     const navigate = useNavigate()
     const [menuAbierto, setMenuAbierto] = useState(false)
+
+    const enlaces = esSocio ? ENLACES_SOCIO : ENLACES_ADMIN
 
     const cerrarSesion = async () => {
         await logout()
@@ -36,7 +40,7 @@ export default function Topbar() {
                 </div>
 
                 <nav className="hidden md:flex items-center gap-1">
-                    {ENLACES.map((enlace) => (
+                    {enlaces.map((enlace) => (
                         <NavLink
                             key={enlace.to}
                             to={enlace.to}
@@ -72,7 +76,7 @@ export default function Topbar() {
 
             {menuAbierto && (
                 <nav className="md:hidden mt-3 flex flex-col gap-1 max-w-6xl mx-auto">
-                    {ENLACES.map((enlace) => (
+                    {enlaces.map((enlace) => (
                         <NavLink
                             key={enlace.to}
                             to={enlace.to}

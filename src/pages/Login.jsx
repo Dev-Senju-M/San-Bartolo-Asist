@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useLocation, Navigate } from 'react-router-dom'
+import { useNavigate, useLocation, Navigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Boton, Campo, Input, Tarjeta } from '../components/shared/UI'
 import logoJesus from '../assets/images/Logo_Jesus.png'
@@ -14,7 +14,7 @@ export default function Login() {
   const [enviando, setEnviando] = useState(false)
 
   if (!cargando && session) {
-    const destino = location.state?.from?.pathname || '/resumen'
+    const destino = location.state?.from?.pathname || '/'
     return <Navigate to={destino} replace />
   }
 
@@ -24,7 +24,7 @@ export default function Login() {
     setEnviando(true)
     try {
       await login(email, password)
-      navigate('/resumen')
+      navigate('/')
     } catch (err) {
       setError('Correo o contraseña incorrectos.')
     } finally {
@@ -71,6 +71,13 @@ export default function Login() {
               {enviando ? 'Ingresando…' : 'Ingresar'}
             </Boton>
           </form>
+
+          <Link
+              to="/registro"
+              className="block text-center text-xs text-vino-oscuro/50 underline mt-4"
+          >
+            Crear cuenta
+          </Link>
         </Tarjeta>
       </div>
   )
