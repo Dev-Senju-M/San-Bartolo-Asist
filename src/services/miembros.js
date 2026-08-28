@@ -52,6 +52,9 @@ export async function eliminarMiembro(id) {
 // ---------------------------------------------------------
 // Importación masiva desde Excel
 // filas: [{ nombre_completo, comision_nombre, codigo_socio? }]
+// Los socios nuevos se agregan.
+// Los socios existentes se actualizan si cambia su comisión
+// (o si el Excel trae un código de socio que antes no tenían).
 // ---------------------------------------------------------
 export async function importarMiembrosDesdeExcel(filas, comisiones) {
   const existentes = await listarMiembros()
@@ -68,6 +71,7 @@ export async function importarMiembrosDesdeExcel(filas, comisiones) {
   )
 
   const nuevos = []
+  const actualizaciones = [] // { id, cambios }
   let omitidos = 0
 
   for (const fila of filas) {
@@ -75,17 +79,28 @@ export async function importarMiembrosDesdeExcel(filas, comisiones) {
     if (!nombre) continue
 
     const codigo = fila.codigo_socio ? fila.codigo_socio.toString().trim() : null
-    const yaExiste = codigo
-        ? existentesPorCodigo.has(codigo)
-        : existentesPorNombre.has(normalizarTexto(nombre))
-
-    if (yaExiste) {
-      omitidos += 1
-      continue
-    }
-
     const comisionNombre = (fila.comision || fila.comision_nombre || '').toString().trim()
     const comisionId = mapaComisiones.get(normalizarTexto(comisionNombre)) || null
+
+    const existente = codigo
+        ? existentesPorCodigo.get(codigo)
+        : existentesPorNombre.get(normalizarTexto(nombre))
+
+    if (existente) {
+      const cambios = {}
+      if (comisionId && comisionId !== existente.comision_id) {
+        cambios.comision_id = comisionId
+      }
+      if (codigo && !existente.codigo_socio) {
+        cambios.codigo_socio = codigo
+      }
+      if (Object.keys(cambios).length > 0) {
+        actualizaciones.push({ id: existente.id, cambios })
+      } else {
+        omitidos += 1
+      }
+      continue
+    }
 
     nuevos.push({
       nombre_completo: nombre,
@@ -95,8 +110,9 @@ export async function importarMiembrosDesdeExcel(filas, comisiones) {
     })
 
     // evitar duplicados dentro del mismo archivo
-    if (codigo) existentesPorCodigo.set(codigo, true)
-    existentesPorNombre.set(normalizarTexto(nombre), true)
+    const registroTemporal = { comision_id: comisionId, codigo_socio: codigo }
+    if (codigo) existentesPorCodigo.set(codigo, registroTemporal)
+    existentesPorNombre.set(normalizarTexto(nombre), registroTemporal)
   }
 
   if (nuevos.length > 0) {
@@ -104,5 +120,10 @@ export async function importarMiembrosDesdeExcel(filas, comisiones) {
     if (error) throw error
   }
 
-  return { agregados: nuevos.length, omitidos }
+  for (const { id, cambios } of actualizaciones) {
+    const { error } = await supabase.from('miembros').update(cambios).eq('id', id)
+    if (error) throw error
+  }
+
+  return { agregados: nuevos.length, actualizados: actualizaciones.length, omitidos }
 }

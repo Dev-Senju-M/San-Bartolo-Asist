@@ -33,7 +33,7 @@ export default function ImportarMiembros({ comisiones, onCerrar, onImportado }) 
                 <p className="text-sm text-vino-oscuro/70 mb-4">
                     El archivo debe tener columnas <strong>Nombre completo</strong> y{' '}
                     <strong>Comisión</strong> (y opcionalmente <strong>Código</strong>). Los socios que ya
-                    existan se omitirán automáticamente.
+                    existan se actualizarán si cambió su comisión; el resto se omite automáticamente.
                 </p>
 
                 {!resultado ? (
@@ -56,12 +56,15 @@ export default function ImportarMiembros({ comisiones, onCerrar, onImportado }) 
                     </>
                 ) : (
                     <>
-                        <div className="rounded-lg bg-dorado/10 border border-dorado/30 p-4 mb-4 text-sm">
+                        <div className="rounded-lg bg-dorado/10 border border-dorado/30 p-4 mb-4 text-sm space-y-1">
                             <p>
                                 <strong>{resultado.agregados}</strong> socio(s) agregado(s).
                             </p>
                             <p>
-                                <strong>{resultado.omitidos}</strong> socio(s) omitido(s) por ya existir.
+                                <strong>{resultado.actualizados}</strong> socio(s) actualizado(s).
+                            </p>
+                            <p>
+                                <strong>{resultado.omitidos}</strong> socio(s) sin cambios.
                             </p>
                         </div>
                         <div className="flex justify-end">

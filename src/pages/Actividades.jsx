@@ -41,7 +41,14 @@ export default function Actividades() {
     }
   }
 
-  const borrar = async (id) => {
+  const borrar = async (id, nombreActividad) => {
+    // eliminarActividad borra también en cascada las asistencias asociadas
+    // (on delete cascade en la tabla asistencias), así que se confirma
+    // antes de continuar para evitar borrados accidentales.
+    const confirmado = window.confirm(
+        `¿Eliminar "${nombreActividad}"? Esto borrará también las asistencias registradas para esta actividad. Esta acción no se puede deshacer.`
+    )
+    if (!confirmado) return
     await eliminarActividad(id)
     await cargar()
   }
@@ -123,7 +130,10 @@ export default function Actividades() {
                           {Number(a.puntos_asignados).toFixed(2)} pts
                         </td>
                         <td className="py-2 pr-3 text-right">
-                          <button className="text-carmesi underline text-xs" onClick={() => borrar(a.id)}>
+                          <button
+                              className="text-carmesi underline text-xs"
+                              onClick={() => borrar(a.id, a.nombre)}
+                          >
                             Eliminar
                           </button>
                         </td>

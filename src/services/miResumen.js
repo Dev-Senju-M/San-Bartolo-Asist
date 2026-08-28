@@ -1,13 +1,28 @@
 import { supabase } from '../lib/supabase'
 
 export async function obtenerMiResumen(mes, anio) {
-    const { data: miembroRows, error: errMiembro } = await supabase
+    // Antes: se pedía `miembros` con .limit(1) sin filtrar por el usuario,
+    // confiando en que RLS devolviera solo la fila del socio logueado.
+    // Como la política de la migración 001 daba acceso a TODOS los
+    // miembros a cualquier autenticado, esto podía devolver los datos
+    // de otro socio. Ahora se filtra explícitamente por user_id, y además
+    // la migración 002 restringe RLS para que un socio solo pueda ver su
+    // propia fila (defensa en profundidad: aunque una de las dos capas
+    // falle, la otra sigue protegiendo).
+    const {
+        data: { user },
+        error: errUser,
+    } = await supabase.auth.getUser()
+    if (errUser) throw errUser
+    if (!user) return null
+
+    const { data: miembro, error: errMiembro } = await supabase
         .from('miembros')
         .select('id, nombre_completo, comisiones(nombre)')
-        .limit(1)
+        .eq('user_id', user.id)
+        .maybeSingle()
     if (errMiembro) throw errMiembro
 
-    const miembro = miembroRows?.[0]
     if (!miembro) return null // cuenta no vinculada a ningún socio (ej. cuenta admin)
 
     const [

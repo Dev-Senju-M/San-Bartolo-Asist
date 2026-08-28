@@ -74,8 +74,15 @@ export default function Miembros() {
   }
 
   const alternarActivo = async (m) => {
-    if (m.activo) await darDeBajaMiembro(m.id)
-    else await reactivarMiembro(m.id)
+    if (m.activo) {
+      const confirmado = window.confirm(
+          `¿Dar de baja a "${m.nombre_completo}"? Dejará de aparecer en la toma de asistencia y en los resúmenes activos. Podrás reactivarlo después.`
+      )
+      if (!confirmado) return
+      await darDeBajaMiembro(m.id)
+    } else {
+      await reactivarMiembro(m.id)
+    }
     await cargarDatos()
   }
 
