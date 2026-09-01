@@ -3,7 +3,11 @@ import Layout from '../components/layout/Layout'
 import { Boton, Cargando, Select, Tarjeta } from '../components/shared/UI'
 import { listarActividades } from '../services/actividades'
 import { listarMiembros } from '../services/miembros'
-import { guardarAsistencias, obtenerAsistenciasPorActividad } from '../services/asistencias'
+import {
+  eliminarAsistencia,
+  guardarAsistencias,
+  obtenerAsistenciasPorActividad,
+} from '../services/asistencias'
 import { ESTADOS_ASISTENCIA, MESES, nombreMes } from '../utils/constants'
 
 const hoy = new Date()
@@ -15,6 +19,7 @@ export default function Asistencia() {
   const [actividadId, setActividadId] = useState('')
   const [miembros, setMiembros] = useState([])
   const [estados, setEstados] = useState({}) // { miembro_id: 'A' | 'Ex' | 'F' }
+  const [estadosOriginales, setEstadosOriginales] = useState({}) // lo que ya había en la BD
   const [cargando, setCargando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [guardado, setGuardado] = useState(false)
@@ -43,6 +48,7 @@ export default function Asistencia() {
         mapaEstados[a.miembro_id] = a.estado
       })
       setEstados(mapaEstados)
+      setEstadosOriginales(mapaEstados)
       setCargando(false)
     })
   }, [actividadId])
@@ -53,7 +59,16 @@ export default function Asistencia() {
   )
 
   const marcar = (miembroId, estado) => {
-    setEstados((prev) => ({ ...prev, [miembroId]: estado }))
+    setEstados((prev) => {
+      const copia = { ...prev }
+      if (copia[miembroId] === estado) {
+        // Clic sobre el mismo estado ya marcado: lo quita
+        delete copia[miembroId]
+      } else {
+        copia[miembroId] = estado
+      }
+      return copia
+    })
     setGuardado(false)
   }
 
@@ -77,7 +92,22 @@ export default function Asistencia() {
             actividad_id: actividadId,
             estado: estados[m.id],
           }))
-      await guardarAsistencias(registros)
+
+      // Socios que tenían marca antes y ahora la quitaron: hay que borrarla
+      const paraEliminar = miembros.filter(
+          (m) => estadosOriginales[m.id] && !estados[m.id]
+      )
+
+      if (registros.length > 0) {
+        await guardarAsistencias(registros)
+      }
+      if (paraEliminar.length > 0) {
+        await Promise.all(
+            paraEliminar.map((m) => eliminarAsistencia(m.id, actividadId))
+        )
+      }
+
+      setEstadosOriginales(estados)
       setGuardado(true)
     } finally {
       setGuardando(false)
@@ -127,7 +157,7 @@ export default function Asistencia() {
                   <h2 className="font-display text-xl text-vino">{actividadActual?.nombre}</h2>
                   <p className="text-xs text-vino-oscuro/60">
                     Vale {Number(actividadActual?.puntos_asignados || 0).toFixed(2)} pts · A = 100% ·
-                    Ex = 50% · F = 0%
+                    Ex = 50% · F = 0% · Haz clic de nuevo sobre una marca para quitarla
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -157,6 +187,7 @@ export default function Asistencia() {
                                             ? e.clase
                                             : 'border-vino/15 text-vino-oscuro/40 hover:border-vino/40'
                                     }`}
+                                    title={estados[m.id] === e.valor ? 'Clic para quitar la marca' : ''}
                                 >
                                   {e.valor}
                                 </button>

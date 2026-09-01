@@ -26,7 +26,7 @@ export default function Topbar() {
     }
 
     return (
-        <header className="tarjeta-vidrio-oscura sticky top-0 z-20 px-4 sm:px-6 py-4">
+        <header className="tarjeta-vidrio-oscura acento-superior sticky top-0 z-20 px-4 sm:px-6 py-4">
             <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                     <img

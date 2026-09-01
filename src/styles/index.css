@@ -76,7 +76,48 @@ h1, h2, h3, h4, .font-display {
 .estado-f {
     background-color: rgba(158, 27, 52, 0.12);
     color: var(--color-carmesi);
-    border: 1px solid rgba(158, 27, 52, 0.4);
+    border: 1.5px solid var(--color-carmesi);
+    font-weight: 700;
+}
+
+/* ===== Neobrutalismo selectivo: solo para acciones y datos prioritarios ===== */
+
+/* Línea de acento carmesí en cabeceras (topbar) */
+.acento-superior {
+    border-top: 3px solid var(--color-carmesi);
+}
+
+/* Botón de acción primaria: relieve duro con "presión" al interactuar */
+.boton-duro {
+    border: 2.5px solid var(--color-vino-oscuro);
+    box-shadow: 4px 4px 0 var(--color-dorado);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.boton-duro:hover {
+    transform: translate(1px, 1px);
+    box-shadow: 3px 3px 0 var(--color-dorado);
+}
+
+.boton-duro:active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+}
+
+/* Tarjeta dura: para stats y datos que deben destacar sobre el vidrio */
+.tarjeta-dura {
+    background: var(--color-crema);
+    border: 2.5px solid var(--color-vino-oscuro);
+    border-radius: 10px;
+    box-shadow: 5px 5px 0 var(--color-carmesi);
+}
+
+.tarjeta-dura-dorado {
+    box-shadow: 5px 5px 0 var(--color-dorado);
+}
+
+.tarjeta-dura-vino {
+    box-shadow: 5px 5px 0 var(--color-vino);
 }
 
 ::selection {

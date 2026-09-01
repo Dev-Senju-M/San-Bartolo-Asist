@@ -1,10 +1,12 @@
 export function Boton({ children, variante = 'primario', className = '', ...props }) {
-    const base = 'px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+    const base = 'px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed'
     const variantes = {
-        primario: 'bg-vino text-hueso hover:bg-vino-oscuro',
-        dorado: 'bg-dorado text-vino-oscuro hover:bg-dorado-suave',
-        peligro: 'bg-carmesi text-hueso hover:bg-carmesi/85',
-        fantasma: 'bg-transparent text-vino border border-vino/30 hover:bg-vino/5',
+        // Acción principal: neobrutalista, para que destaque sobre el resto del sitio (glass)
+        primario: 'bg-carmesi text-hueso boton-duro hover:bg-carmesi/90',
+        dorado: 'bg-dorado text-vino-oscuro transition-colors hover:bg-dorado-suave',
+        // Acción destructiva: outline (mismo tono de alerta, forma distinta a "primario" para no confundirse)
+        peligro: 'bg-transparent text-carmesi border-2 border-carmesi transition-colors hover:bg-carmesi hover:text-hueso',
+        fantasma: 'bg-transparent text-vino border border-vino/30 transition-colors hover:bg-vino/5',
     }
     return (
         <button className={`${base} ${variantes[variante]} ${className}`} {...props}>
@@ -13,8 +15,11 @@ export function Boton({ children, variante = 'primario', className = '', ...prop
     )
 }
 
-export function Tarjeta({ children, className = '' }) {
-    return <div className={`tarjeta-vidrio rounded-xl p-4 sm:p-6 ${className}`}>{children}</div>
+export function Tarjeta({ children, className = '', variante = 'vidrio' }) {
+    // variante "vidrio" (por defecto) para contenido informativo;
+    // variante "dura" para datos/stats que deben destacar (neobrutalista)
+    const clase = variante === 'dura' ? 'tarjeta-dura' : 'tarjeta-vidrio rounded-xl'
+    return <div className={`${clase} p-4 sm:p-6 ${className}`}>{children}</div>
 }
 
 export function Campo({ etiqueta, children, className = '' }) {

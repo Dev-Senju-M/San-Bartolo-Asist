@@ -19,6 +19,15 @@ export async function guardarAsistencias(registros) {
   return data
 }
 
+export async function eliminarAsistencia(miembroId, actividadId) {
+  const { error } = await supabase
+      .from('asistencias')
+      .delete()
+      .eq('miembro_id', miembroId)
+      .eq('actividad_id', actividadId)
+  if (error) throw error
+}
+
 export async function listarAsistenciasDeMiembro(miembroId, { mes, anio } = {}) {
   let query = supabase
       .from('asistencias')
