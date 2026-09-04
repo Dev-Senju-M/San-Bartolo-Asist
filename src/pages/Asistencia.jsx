@@ -3,12 +3,13 @@ import Layout from '../components/layout/Layout'
 import { Boton, Cargando, Select, Tarjeta } from '../components/shared/UI'
 import { listarActividades } from '../services/actividades'
 import { listarMiembros } from '../services/miembros'
+import { listarComisiones } from '../services/comisiones'
 import {
   eliminarAsistencia,
   guardarAsistencias,
   obtenerAsistenciasPorActividad,
 } from '../services/asistencias'
-import { ESTADOS_ASISTENCIA, MESES, nombreMes } from '../utils/constants'
+import { ESTADOS_ASISTENCIA, MESES, nombreMes, ordenarConColaboradoresAlFinal } from '../utils/constants'
 
 const hoy = new Date()
 
@@ -17,12 +18,18 @@ export default function Asistencia() {
   const [anio, setAnio] = useState(hoy.getFullYear())
   const [actividades, setActividades] = useState([])
   const [actividadId, setActividadId] = useState('')
+  const [comisiones, setComisiones] = useState([])
+  const [comisionId, setComisionId] = useState('')
   const [miembros, setMiembros] = useState([])
   const [estados, setEstados] = useState({}) // { miembro_id: 'A' | 'Ex' | 'F' }
   const [estadosOriginales, setEstadosOriginales] = useState({}) // lo que ya había en la BD
   const [cargando, setCargando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [guardado, setGuardado] = useState(false)
+
+  useEffect(() => {
+    listarComisiones().then(setComisiones)
+  }, [])
 
   useEffect(() => {
     listarActividades({ mes, anio }).then((data) => {
@@ -39,10 +46,15 @@ export default function Asistencia() {
     setCargando(true)
     setGuardado(false)
     Promise.all([
-      listarMiembros({ soloActivos: true }),
+      listarMiembros({ soloActivos: true, comisionId: comisionId || null }),
       obtenerAsistenciasPorActividad(actividadId),
     ]).then(([m, asistenciasExistentes]) => {
-      setMiembros(m)
+      setMiembros(
+          ordenarConColaboradoresAlFinal(m, {
+            nombreComision: (mi) => mi.comisiones?.nombre,
+            nombre: (mi) => mi.nombre_completo,
+          })
+      )
       const mapaEstados = {}
       asistenciasExistentes.forEach((a) => {
         mapaEstados[a.miembro_id] = a.estado
@@ -51,7 +63,7 @@ export default function Asistencia() {
       setEstadosOriginales(mapaEstados)
       setCargando(false)
     })
-  }, [actividadId])
+  }, [actividadId, comisionId])
 
   const actividadActual = useMemo(
       () => actividades.find((a) => a.id === actividadId),
@@ -140,6 +152,14 @@ export default function Asistencia() {
                 </option>
             ))}
           </Select>
+          <Select value={comisionId} onChange={(e) => setComisionId(e.target.value)}>
+            <option value="">Todas las comisiones</option>
+            {comisiones.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
+                </option>
+            ))}
+          </Select>
         </div>
 
         {!actividadId ? (
@@ -160,7 +180,8 @@ export default function Asistencia() {
                     Ex = 50% · F = 0% · Haz clic de nuevo sobre una marca para quitarla
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-vino-oscuro/60">{miembros.length} socio(s)</span>
                   <button
                       onClick={() => marcarTodos('A')}
                       className="text-xs underline text-vino-oscuro/70"
@@ -172,6 +193,10 @@ export default function Asistencia() {
 
               {cargando ? (
                   <Cargando />
+              ) : miembros.length === 0 ? (
+                  <p className="text-sm text-vino-oscuro/60 py-6 text-center">
+                    No hay socios activos en esta comisión.
+                  </p>
               ) : (
                   <div className="divide-y divide-vino/8">
                     {miembros.map((m) => (
@@ -199,7 +224,11 @@ export default function Asistencia() {
               )}
 
               <div className="flex items-center gap-3 mt-6">
-                <Boton variante="dorado" onClick={guardar} disabled={guardando || cargando}>
+                <Boton
+                    variante="dorado"
+                    onClick={guardar}
+                    disabled={guardando || cargando || miembros.length === 0}
+                >
                   {guardando ? 'Guardando…' : 'Guardar asistencia'}
                 </Boton>
                 {guardado && <span className="text-sm text-vino">Asistencia guardada ✓</span>}

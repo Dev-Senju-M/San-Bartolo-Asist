@@ -10,6 +10,7 @@ import {
 } from '../services/miembros'
 import { listarComisiones } from '../services/comisiones'
 import ImportarMiembros from '../components/miembros/ImportarMiembros'
+import { ordenarConColaboradoresAlFinal } from '../utils/constants'
 
 const MIEMBRO_VACIO = { nombre_completo: '', comision_id: '', codigo_socio: '' }
 
@@ -74,23 +75,19 @@ export default function Miembros() {
   }
 
   const alternarActivo = async (m) => {
-    if (m.activo) {
-      const confirmado = window.confirm(
-          `¿Dar de baja a "${m.nombre_completo}"? Dejará de aparecer en la toma de asistencia y en los resúmenes activos. Podrás reactivarlo después.`
-      )
-      if (!confirmado) return
-      await darDeBajaMiembro(m.id)
-    } else {
-      await reactivarMiembro(m.id)
-    }
+    if (m.activo) await darDeBajaMiembro(m.id)
+    else await reactivarMiembro(m.id)
     await cargarDatos()
   }
 
-  const miembrosFiltrados = miembros.filter((m) => {
-    if (!mostrarInactivos && !m.activo) return false
-    if (filtroComision && m.comision_id !== filtroComision) return false
-    return true
-  })
+  const miembrosFiltrados = ordenarConColaboradoresAlFinal(
+      miembros.filter((m) => {
+        if (!mostrarInactivos && !m.activo) return false
+        if (filtroComision && m.comision_id !== filtroComision) return false
+        return true
+      }),
+      { nombreComision: (m) => m.comisiones?.nombre, nombre: (m) => m.nombre_completo }
+  )
 
   return (
       <Layout>

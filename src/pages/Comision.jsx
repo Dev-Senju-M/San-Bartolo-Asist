@@ -4,7 +4,7 @@ import { Boton, Cargando, Input, Select, Tarjeta } from '../components/shared/UI
 import { listarMiembros } from '../services/miembros'
 import { listarComisiones } from '../services/comisiones'
 import { guardarComisionManual, obtenerComisionManual } from '../services/comisionManual'
-import { MESES } from '../utils/constants'
+import { MESES, ordenarConColaboradoresAlFinal } from '../utils/constants'
 
 const hoy = new Date()
 
@@ -30,7 +30,12 @@ export default function Comision() {
             listarMiembros({ soloActivos: true, comisionId: comisionId || null }),
             obtenerComisionManual(mes, anio),
         ]).then(([m, existentes]) => {
-            setMiembros(m)
+            setMiembros(
+                ordenarConColaboradoresAlFinal(m, {
+                    nombreComision: (mi) => mi.comisiones?.nombre,
+                    nombre: (mi) => mi.nombre_completo,
+                })
+            )
             const mapa = {}
             existentes.forEach((c) => {
                 mapa[c.miembro_id] = c.puntos

@@ -36,3 +36,16 @@ export const colorPorPuntaje = (puntaje) => {
   if (puntaje >= 50) return 'text-amber-700'
   return 'text-[var(--color-carmesi)]'
 }
+
+export const NOMBRE_COMISION_COLABORADORES = 'Colaboradores (Nuevo Ingreso)'
+
+// Ordena una lista alfabéticamente, pero siempre deja al final a quienes
+// pertenecen a la comisión "Colaboradores (Nuevo Ingreso)"
+export function ordenarConColaboradoresAlFinal(lista, { nombreComision, nombre }) {
+  return [...lista].sort((a, b) => {
+    const esColabA = nombreComision(a) === NOMBRE_COMISION_COLABORADORES
+    const esColabB = nombreComision(b) === NOMBRE_COMISION_COLABORADORES
+    if (esColabA !== esColabB) return esColabA ? 1 : -1
+    return nombre(a).localeCompare(nombre(b), 'es')
+  })
+}
